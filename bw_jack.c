@@ -7,7 +7,8 @@
 #include <sndfile.h>
 
 #define PERIOD_SIZE 4096
-#define DEVICE "plughw:0,0"
+#define DEVICE_NAME "bcm2835 Headphones"
+#define FALLBACK "plughw:0,0"
 
 // logs
 
@@ -45,14 +46,40 @@ static void handle_sig(int sig)
     _exit(0);
 }
 
+static const char *find_alsa_device(char *out, size_t out_len)
+{
+    int card = -1;
+    while (snd_card_next(&card) == 0 && card >= 0)
+    {
+        char *name = NULL;
+        if (snd_card_get_longname(card, &name) == 0 && name)
+        {
+            int match = strstr(name, DEVICE_NAME) != NULL;
+            free(name);
+            if (match)
+            {
+                snprintf(out, out_len, "plughw:%d,0", card);
+                LOG_INFO("Found ALSA device '%s' at card %d", DEVICE_NAME, card);
+                return out;
+            }
+        }
+    }
+    LOG_WARN("Device '%s' not found, falling back to %s", DEVICE_NAME, FALLBACK);
+    snprintf(out, out_len, FALLBACK);
+    return out;
+}
+
 static snd_pcm_t *alsa_open(int rate, int channels)
 {
+    char dev[32];
+    const char *device = find_alsa_device(dev, sizeof(dev));
+
     snd_pcm_t *pcm;
     snd_pcm_hw_params_t *params;
 
-    if (snd_pcm_open(&pcm, DEVICE, SND_PCM_STREAM_PLAYBACK, 0) < 0)
+    if (snd_pcm_open(&pcm, device, SND_PCM_STREAM_PLAYBACK, 0) < 0)
     {
-        LOG_ERR("Failed to open ALSA device: %s", DEVICE);
+        LOG_ERR("Failed to open ALSA device: %s", device);
         return NULL;
     }
 
@@ -184,7 +211,7 @@ typedef struct {
 static void usage(const char *prog)
 {
     fprintf(stderr,
-            "Usage: %s -audio <file|-> [-rate N] [-channels N] [-loop] [-raw]\n"
+            "Usage: %s -audio <file|-> [-rate N] [-channels N] [-loop] [-raw]\n",
             prog);
     exit(1);
 }
