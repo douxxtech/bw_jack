@@ -89,7 +89,9 @@ ffmpeg -i input.mp3 -f s16le -ar 48000 -ac 2 - | ./bw_jack -audio -
 
 ## Device
 
-Hardcoded to `plughw:0,0`. If your setup uses a different ALSA device, change `DEVICE` at the top of `bw_jack.c` before building.
+Automatically detects the `bcm2835 Headphones` card by name. 
+Falls back to `plughw:0,0` if not found. To target a different card, change `DEVICE_NAME` at 
+the top of `bw_jack.c` before building. You can also change `FALLBACK` if needed.
 
 ## Dependencies
 
