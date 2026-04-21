@@ -25,38 +25,41 @@ sudo mkdir -p /opt/BotWave/backends/bw_jack
 sudo cp bw_jack /opt/BotWave/backends/bw_jack/bw_jack
 ```
 
-### 2. Clear PiWave's path cache
+## Install
 
-PiWave (the backend manager) caches the backend path in two places. Both need to be removed or it'll keep pointing to `bw_custom`:
+Place the binary somewhere accessible:
 
 ```bash
-sudo rm -f /opt/BotWave/backend_path
-sudo rm -f /opt/BotWave/venv/lib/python3.11/site-packages/piwave/bw_custom_path
+sudo mkdir -p /opt/BotWave/backends/bw_jack
+sudo cp bw_jack /opt/BotWave/backends/bw_jack/bw_jack
 ```
-
-> The `python3.11` part depends on your Python version. If the above fails, find the right path with:
-> ```bash
-> find /opt/BotWave/venv -name "bw_custom_path"
-> ```
 
 ## Configure
 
-### 3. Point BotWave at the new backend
+Set `backend_path` to point BotWave at the new binary. Pick whichever method suits you:
 
-Run the local BotWave shell:
-
-```bash
-sudo bw-local
+**Via `bw-local` shell:**
+```
+set backend_path /opt/BotWave/backends/bw_jack/bw_jack
 ```
 
-Then inside the shell, set the path and do a dummy start to force the cache to refresh:
-
+**Via `.env` or config file:**
+```env
+backend_path=/opt/BotWave/backends/bw_jack/bw_jack
 ```
-set bwcustom_path /opt/BotWave/backends/bw_jack/bw_jack
+> Any file passed with `--config CONFIG` when running BotWave works here too.
+
+It's also recommended to enable talk mode while getting things set up:
+```
+set talk true
+```
+
+Then just run:
+```
 start <any audio file>
 ```
 
-That's it, the path is now stored. You don't need to run `set` again after this.
+That's it, the path is now stored. However, if you went with the `set` method, you'll need to run the command on every new session. It is recommended to use a config file for a permanent setup. 
 
 ## Usage
 
